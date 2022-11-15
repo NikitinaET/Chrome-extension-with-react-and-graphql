@@ -1,9 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Chrome Extension with React & Webpack",
+  "name": "Chrome Extension with React & GRAPHQL",
+  "key": "fanbabmghjllmcabpfmhnigpnaleceog",
   "permissions": [
-    "tabs"
+    "tabs", "identity", "identity.email"
   ],
+  "oauth2": {
+    "client_id": "363674661650-rng1bc7emepgi8sh2cs3bbns0ahgojut.apps.googleusercontent.com",
+    "scopes": [
+     "profile email",
+     "https://www.googleapis.com/auth/contacts"
+    ]
+  },
   "description": "A chrome extension boilerplate built with React 17, Webpack 5, and Webpack Dev Server 4",
   "background": { "service_worker": "background.bundle.js" },
   "action": {

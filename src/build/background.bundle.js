@@ -5,13 +5,124 @@
 /*!*********************************!*\
   !*** ./src/background/index.js ***!
   \*********************************/
-/***/ (() => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
+/* module decorator */ module = __webpack_require__.nmd(module);
+(function () {
+  var enterModule = typeof reactHotLoaderGlobal !== 'undefined' ? reactHotLoaderGlobal.enterModule : undefined;
+  enterModule && enterModule(module);
+})();
 var __signature__ = typeof reactHotLoaderGlobal !== 'undefined' ? reactHotLoaderGlobal.default.signature : function (a) {
   return a;
 };
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-undef */
 console.log('This is the background page.');
-console.log('Put the background scripts here.');
+
+// self.onload = () => {
+//   chrome.indentity.getAuthToken({}, (token) => {
+//     console.log('token',token)
+//   })
+// }
+
+const API_KEY = '';
+let user_signed_in = false;
+chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
+  if (signedIn) {
+    user_signed_in = true;
+  } else {
+    user_signed_in = false;
+  }
+});
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.message === 'get_auth_token') {
+    chrome.identity.getAuthToken({
+      interactive: true
+    }, function (token) {
+      console.log(token);
+    });
+  } else if (request.message === 'get_profile') {
+    chrome.identity.getProfileUserInfo({
+      accountStatus: 'ANY'
+    }, function (user_info) {
+      console.log(user_info);
+    });
+  } else if (request.message === 'get_contacts') {
+    chrome.identity.getAuthToken({
+      interactive: true
+    }, function (token) {
+      let fetch_url = `https://people.googleapis.com/v1/contactGroups/all?maxMembers=20&key=${API_KEY}`;
+      let fetch_options = {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      fetch(fetch_url, fetch_options).then(res => res.json()).then(res => {
+        if (res.memberCount) {
+          const members = res.memberResourceNames;
+          fetch_url = `https://people.googleapis.com/v1/people:batchGet?personFields=names&key=${API_KEY}`;
+          members.forEach(member => {
+            fetch_url += `&resourceNames=${encodeURIComponent(member)}`;
+          });
+          fetch(fetch_url, fetch_options).then(res => res.json()).then(res => console.log(res));
+        }
+      });
+    });
+  } else if (request.message === 'create_contact') {
+    chrome.identity.getAuthToken({
+      interactive: true
+    }, function (token) {
+      let fetch_url = `https://people.googleapis.com/v1/people:createContact?key=${API_KEY}`;
+      let fetch_options = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'names': [{
+            "givenName": "Johnny",
+            "familyName": "Silver"
+          }]
+        })
+      };
+      fetch(fetch_url, fetch_options).then(res => res.json()).then(res => console.log(res));
+    });
+  } else if (request.message === 'delete_contact') {
+    chrome.identity.getAuthToken({
+      interactive: true
+    }, function (token) {
+      let fetch_url = `https://people.googleapis.com/v1/contactGroups/all?maxMembers=20&key=${API_KEY}`;
+      let fetch_options = {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      fetch(fetch_url, fetch_options).then(res => res.json()).then(res => {
+        if (res.memberCount) {
+          const members = res.memberResourceNames;
+          fetch_options.method = 'DELETE';
+          fetch_url = `https://people.googleapis.com/v1/${members[0]}:deleteContact?key=${API_KEY}`;
+          fetch(fetch_url, fetch_options).then(res => console.log(res));
+        }
+      });
+    });
+  }
+});
+;
+(function () {
+  var reactHotLoader = typeof reactHotLoaderGlobal !== 'undefined' ? reactHotLoaderGlobal.default : undefined;
+  if (!reactHotLoader) {
+    return;
+  }
+  reactHotLoader.register(API_KEY, "API_KEY", "/Users/tamaranikitina/Documents/chrome-extension/src/background/index.js");
+  reactHotLoader.register(user_signed_in, "user_signed_in", "/Users/tamaranikitina/Documents/chrome-extension/src/background/index.js");
+})();
+;
+(function () {
+  var leaveModule = typeof reactHotLoaderGlobal !== 'undefined' ? reactHotLoaderGlobal.leaveModule : undefined;
+  leaveModule && leaveModule(module);
+})();
 
 /***/ })
 
@@ -30,8 +141,8 @@ console.log('Put the background scripts here.');
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -45,6 +156,9 @@ console.log('Put the background scripts here.');
 /******/ 			module.error = e;
 /******/ 			throw e;
 /******/ 		}
+/******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -76,7 +190,7 @@ console.log('Put the background scripts here.');
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("7146e1540671788cdc65")
+/******/ 		__webpack_require__.h = () => ("32034d5189b77af6eadc")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
@@ -127,6 +241,15 @@ console.log('Put the background scripts here.');
 /******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
 /******/ 			script.onload = onScriptComplete.bind(null, script.onload);
 /******/ 			needAttach && document.head.appendChild(script);
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/node module decorator */
+/******/ 	(() => {
+/******/ 		__webpack_require__.nmd = (module) => {
+/******/ 			module.paths = [];
+/******/ 			if (!module.children) module.children = [];
+/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
